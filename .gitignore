@@ -1,0 +1,6 @@
+node_modules/
+data/
+*.log
+.patch.tmp
+.run.sh
+.tmpdb/

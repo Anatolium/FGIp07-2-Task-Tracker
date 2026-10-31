@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Таск-трекер команды</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <section id="login-view" class="login" hidden>
+    <form id="login-form" class="login__card" autocomplete="on">
+      <div class="login__brand">
+        <span class="brand__mark" aria-hidden="true">Т</span>
+        <h1>Таск-трекер</h1>
+      </div>
+      <p class="login__hint">Внутренний трекер задач команды. Вход по логину и паролю.</p>
+      <label class="field">
+        <span class="field__label">Логин</span>
+        <input id="login-input" name="login" type="text" autocomplete="username" required />
+      </label>
+      <label class="field">
+        <span class="field__label">Пароль</span>
+        <input id="password-input" name="password" type="password" autocomplete="current-password" required />
+      </label>
+      <p id="login-error" class="login__error" role="alert" hidden></p>
+      <button id="login-submit" class="btn btn--primary btn--block" type="submit">Войти</button>
+      <details class="login__demo">
+        <summary>Демо-доступы</summary>
+        <ul>
+          <li><b>Руководитель:</b> <code>manager</code> / <code>manager123</code></li>
+          <li><b>Сотрудник:</b> <code>ivanov</code> / <code>employee123</code></li>
+          <li><b>Сотрудник:</b> <code>petrova</code> / <code>employee123</code></li>
+        </ul>
+      </details>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">Т</span>
+        <span class="brand__title">Таск-трекер</span>
+      </div>
+      <div class="topbar__search">
+        <input id="search" type="search" placeholder="Поиск по названию и описанию…" aria-label="Поиск задач" />
+      </div>
+      <div class="topbar__actions">
+        <button id="btn-users" class="btn btn--ghost" type="button" hidden>Пользователи</button>
+        <button id="btn-export" class="btn btn--ghost" type="button">CSV</button>
+        <button id="btn-new" class="btn btn--primary" type="button" hidden>+ Задача</button>
+        <div class="user-chip" id="user-chip">
+          <span class="user-chip__avatar" id="user-avatar" aria-hidden="true">?</span>
+          <span class="user-chip__text">
+            <span class="user-chip__name" id="user-name">—</span>
+            <span class="user-chip__role" id="user-role"></span>
+          </span>
+        </div>
+        <button id="btn-logout" class="btn btn--ghost" type="button">Выйти</button>
+      </div>
+    </header>
+
+    <div class="filters">
+      <div class="filters__statuses" id="status-filter" role="group" aria-label="Фильтр по статусу"></div>
+      <div class="filters__selects">
+        <select id="filter-assignee" aria-label="Фильтр по исполнителю" hidden></select>
+        <select id="filter-due" aria-label="Фильтр по сроку">
+          <option value="">Любой срок</option>
+          <option value="overdue">Просроченные</option>
+          <option value="today">Сегодня</option>
+          <option value="week">Ближайшая неделя</option>
+          <option value="set">Со сроком</option>
+          <option value="none">Без срока</option>
+        </select>
+        <button id="btn-reset" class="btn btn--ghost" type="button">Сбросить</button>
+      </div>
+    </div>
+
+    <main class="board" id="board"></main>
+    <p class="board__summary" id="board-summary"></p>
+  </div>
+
+  <dialog id="task-dialog" class="dialog">
+    <div class="dialog__head">
+      <h2 id="task-dialog-title">Задача</h2>
+      <button class="icon-btn" type="button" data-close-dialog aria-label="Закрыть">✕</button>
+    </div>
+    <div class="dialog__body">
+      <div class="task-main">
+        <label class="field">
+          <span class="field__label">Название</span>
+          <input id="task-title" type="text" maxlength="200" />
+        </label>
+        <label class="field">
+          <span class="field__label">Описание</span>
+          <textarea id="task-description" rows="5" maxlength="5000"></textarea>
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span class="field__label">Исполнитель</span>
+            <select id="task-assignee"></select>
+          </label>
+          <label class="field">
+            <span class="field__label">Срок</span>
+            <input id="task-due" type="date" />
+          </label>
+          <label class="field">
+            <span class="field__label">Статус</span>
+            <select id="task-status"></select>
+          </label>
+        </div>
+        <p class="task-meta" id="task-meta"></p>
+        <div class="task-actions">
+          <button id="task-save" class="btn btn--primary" type="button">Сохранить</button>
+          <button id="task-delete" class="btn btn--danger" type="button" hidden>Удалить</button>
+          <button class="btn btn--ghost" type="button" data-close-dialog>Закрыть</button>
+        </div>
+      </div>
+      <aside class="task-side">
+        <div class="tabs" role="tablist">
+          <button class="tab is-active" type="button" data-tab="comments" role="tab">Комментарии</button>
+          <button class="tab" type="button" data-tab="history" role="tab">История</button>
+        </div>
+        <div class="tab-panel" id="panel-comments">
+          <ul class="comments" id="comments-list"></ul>
+          <form class="comment-form" id="comment-form">
+            <textarea id="comment-input" rows="2" maxlength="2000" placeholder="Написать комментарий…"></textarea>
+            <button class="btn btn--primary" type="submit">Отправить</button>
+          </form>
+        </div>
+        <div class="tab-panel" id="panel-history" hidden>
+          <ul class="history" id="history-list"></ul>
+        </div>
+      </aside>
+    </div>
+  </dialog>
+
+  <dialog id="users-dialog" class="dialog dialog--narrow">
+    <div class="dialog__head">
+      <h2>Пользователи</h2>
+      <button class="icon-btn" type="button" data-close-dialog aria-label="Закрыть">✕</button>
+    </div>
+    <div class="dialog__body dialog__body--stack">
+      <p class="hint" id="users-limit"></p>
+      <ul class="users" id="users-list"></ul>
+      <form class="user-form" id="user-form">
+        <h3>Новый пользователь</h3>
+        <div class="field-row">
+          <label class="field"><span class="field__label">Логин</span><input id="new-login" type="text" required /></label>
+          <label class="field"><span class="field__label">Имя</span><input id="new-name" type="text" required /></label>
+        </div>
+        <div class="field-row">
+          <label class="field"><span class="field__label">Пароль</span><input id="new-password" type="password" minlength="6" required /></label>
+          <label class="field"><span class="field__label">Роль</span>
+            <select id="new-role">
+              <option value="employee">Сотрудник</option>
+              <option value="manager">Руководитель</option>
+            </select>
+          </label>
+        </div>
+        <button class="btn btn--primary" type="submit">Добавить</button>
+      </form>
+    </div>
+  </dialog>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
