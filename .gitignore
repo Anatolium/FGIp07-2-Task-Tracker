@@ -4,3 +4,7 @@ data/
 .patch.tmp
 .run.sh
 .tmpdb/
+venv/
+__pycache__/
+*.db
+.env.
