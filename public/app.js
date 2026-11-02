@@ -1,4 +1,5 @@
 const $ = (selector) => document.querySelector(selector);
+const API_BASE = window.location.pathname.replace(/\/$/, '') || '';
 
 const STATUS_FALLBACK = ['new', 'in_progress', 'review', 'done'];
 const STATUS_LABELS_FALLBACK = {
@@ -27,7 +28,8 @@ class ApiError extends Error {
 }
 
 async function api(method, path, body) {
-  const response = await fetch(path, {
+  const url = path.startsWith('http') ? path : API_BASE + path;
+  const response = await fetch(url, {
     method,
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -147,7 +149,7 @@ async function init() {
   });
   $('#btn-reset').addEventListener('click', resetFilters);
   $('#btn-export').addEventListener('click', () => {
-    window.location.href = `/api/export.csv?${buildQuery().toString()}`;
+    window.location.href = `${API_BASE}/api/export.csv?${buildQuery().toString()}`;
   });
   $('#btn-new').addEventListener('click', () => openTaskDialog(null));
   $('#btn-users').addEventListener('click', openUsersDialog);
